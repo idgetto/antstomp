@@ -1,4 +1,4 @@
-Space Invaders game using the Memory LCD on the SLSTK3401A.
+Ant Stomp game using the Memory LCD on the SLSTK3401A.
 
 This example project uses the EFM32 CMSIS including emlib and the
 board support package support functions/drivers to demonstrate driving
