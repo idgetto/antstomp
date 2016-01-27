@@ -216,7 +216,7 @@ static void showWelcomeScreen(void)
  *****************************************************************************/
 void ANTSTOMP_GameLoop(void)
 {
-   int level = 1;
+   int level = 0;
    int status;
 
    while (1)
@@ -352,7 +352,7 @@ void ANTSTOMP_GameLoop(void)
          case gameOver:
             if (timeout == 0)
             {
-               level = 1;
+               level = 0;
                pb0Pressed = false;
                pb1Pressed = false;
                nextState = qrCode;

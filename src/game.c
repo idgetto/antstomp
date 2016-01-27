@@ -28,19 +28,20 @@ static const int ant_y_pos[] = { 64 };
 static const int aliens_sprites[3][5] = { {0, 3, 0, 3, 0},
                                                   {1, 4, 1, 4, 1},
                                                   {2, 2, 2, 2, 2}};
-
 static GameObject ant;
 
 static int antSpeedX = 5;
 
 static int level = 1;
-static int score = 0;
+static int life = 0;
 
 static int animationWaitCount = 0;
 static int alienMoveWaitCount = 0;
 
 static int alienMoveThres    = 10;
 static int alienMissileThres = 10;
+
+static bool gameOver = false;
 
 
 /* Local function declarations */
@@ -119,9 +120,17 @@ static void animateGameObject(GameObject *obj)
  *****************************************************************************/
 void GAME_Stomp(void)
 {
-	++score;
-	if(ant.posX<128/2 + 6 && ant.posX>128/2 - 6)
-		ant.dead = true;
+
+	if (life <= 100) {
+		gameOver = true;
+		life = 0;
+	} else {
+		life -= 100;
+		if(ant.posX<128/2 + 6 && ant.posX>128/2 - 6)
+				ant.dead = true;
+	}
+
+
 
 }
 
@@ -172,13 +181,13 @@ void GAME_Redraw(void)
   /* Draw background */
   RENDER_DrawBackdrop();
 
-  /* Update score and level */
-  RENDER_Write(2,  2, "LEVEL");
+  /* Update life and level */
+  RENDER_Write(2,  2, "SCORE");
   ConvertHexToString(num, sizeof(num), level, true);
   RENDER_Write(36, 2, num);
 
-  RENDER_Write(61, 2, "SCORE:");
-  ConvertHexToString(num, sizeof(num), score, false);
+  RENDER_Write(61, 2, "LIFE:");
+  ConvertHexToString(num, sizeof(num), life, false);
   RENDER_Write(103, 2, num);
 
   RENDER_DrawSprite(ant.posX, ant.posY, ant.sprite);
@@ -194,16 +203,26 @@ void GAME_Redraw(void)
  *****************************************************************************/
 int GAME_Update(void)
 {
+  if (gameOver || --life == 0) {
+	  return GAME_OVER;
+  }
+
   unsigned int i;
   int deadCount;
 
-  antSpeedX *= (2 * (rand() / (float) RAND_MAX));
-  if(antSpeedX == 0)
-	 antSpeedX = 1;
+  bool pos = antSpeedX > 0 && rand() % 10 != 0;
+  antSpeedX = (int) (rand() % 20);
+  if (!pos) {
+	  antSpeedX *= -1;
+  }
+
   ant.posX += antSpeedX;
 
-  if ((ant.posX >= (128 - 18)) || (ant.posX <= 0))
-  {
+  if (ant.posX >= 128 - 18) {
+	  ant.posX = 128 - 18;
+	  antSpeedX *= -1;
+  } else if (ant.posX <= 0) {
+	  ant.posX = 0;
 	  antSpeedX *= -1;
   }
 
@@ -214,10 +233,13 @@ int GAME_Update(void)
   //  animateGameObject(&ant);
   //  }
 
-	if(ant.dead)
+	if(ant.dead) {
 		return GAME_VICTORY;
-	else
+	} else if (gameOver) {
+		return GAME_OVER;
+	} else {
 		return GAME_RUNNING;
+	}
 
 
 }
@@ -235,10 +257,13 @@ void GAME_Init(int lvl)
   /* Set difficulty */
   level = lvl;
 
-  /* Reset score upon new game (level 1 init) */
-  if (level == 1)
+  /* Reset life upon new game (level 0 init) */
+  if (level == 0)
   {
-    score = 0;
+	gameOver = false;
+    life = 5000;
+  } else {
+	  life += 500;
   }
 
   animationWaitCount = 0;
